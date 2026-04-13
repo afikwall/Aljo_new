@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  *:not(td):not(th):not(table) {
+    min-width: 0;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased tracking-normal;
+  }
+
+  .dark input[type='date']::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "skill_name": "events-calendar",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a calendar that shows a list of scheduled meetings. Users should be able to create new meetings by clicking an empty time slot and drag existing meetings to reschedule them.",
+      "expected_output": "EventsCalendar component with events array, onSelectSlot for creation, and drag-and-drop for rescheduling via event mutation.",
+      "files": [],
+      "expectations": [
+        "Imports EventsCalendar from @/components/ui/events-calendar",
+        "Passes an events array with start/end Date objects",
+        "Implements onSelectSlot to handle new event creation",
+        "Implements event drag-and-drop (onEventDrop or equivalent)",
+        "Does not wrap EventsCalendar in a fixed-height container that would break the calendar layout"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Show a weekly calendar view for team availability. Each team member's events should appear in a different color. Clicking an event should open a detail popover.",
+      "expected_output": "EventsCalendar in week view with per-member color coding via eventPropGetter and click handling via onSelectEvent.",
+      "files": [],
+      "expectations": [
+        "Uses EventsCalendar from @/components/ui/events-calendar",
+        "Sets defaultView or view to 'week'",
+        "Uses eventPropGetter or similar to apply per-member styling",
+        "Implements onSelectEvent for click handling",
+        "Does not reimport or rewrap react-big-calendar directly"
+      ]
+    }
+  ]
+}

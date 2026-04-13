@@ -1,0 +1,29 @@
+{
+  "skill_name": "file-parsing",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add a CSV upload area where users can upload a sales report CSV file and see the data rendered in a table. Show the column headers and all rows.",
+      "expected_output": "A file input that parses the uploaded CSV and renders the result in a table. Uses the project's CSV parsing utility.",
+      "files": [],
+      "expectations": [
+        "Uses the project's CSV parsing approach (Papa Parse or equivalent from available packages)",
+        "Renders parsed data as a table with headers from the first row",
+        "Handles the async file reading correctly",
+        "Shows a loading or empty state before a file is uploaded"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Let users upload any file — a PDF, Word doc, Excel spreadsheet, or image — and show a preview of the file inline on the page.",
+      "expected_output": "A file input that passes the uploaded file to the project's file preview component, rendering an inline preview.",
+      "files": [],
+      "expectations": [
+        "Uses the project's file preview component from @/components/ui/",
+        "Handles multiple file types (PDF, images, office docs)",
+        "Does not try to manually render PDFs with raw canvas or iframe from scratch",
+        "Passes the file or URL to the preview component correctly"
+      ]
+    }
+  ]
+}

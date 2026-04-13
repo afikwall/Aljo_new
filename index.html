@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin="anonymous"
+    />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script>window.__APP_THEME_CSS__=":root {\n  --background: 0 0% 100%;\n  --foreground: 223.3333 47.3684% 7.4510%;\n  --card: 0 0% 100%;\n  --card-foreground: 223.3333 47.3684% 7.4510%;\n  --popover: 0 0% 100%;\n  --popover-foreground: 223.3333 47.3684% 7.4510%;\n  --primary: 225.9310 70.7317% 40.1961%;\n  --primary-foreground: 0 0% 100%;\n  --secondary: 210.0000 40.0000% 96.0784%;\n  --secondary-foreground: 222.2222 47.3684% 11.1765%;\n  --muted: 210.0000 40.0000% 98.0392%;\n  --muted-foreground: 215.3846 16.3180% 46.8627%;\n  --accent: 160.1183 84.0796% 39.4118%;\n  --accent-foreground: 0 0% 100%;\n  --destructive: 0 84.2365% 60.1961%;\n  --destructive-foreground: 0 0% 100%;\n  --border: 214.2857 31.8182% 91.3725%;\n  --input: 212.7273 26.8293% 83.9216%;\n  --ring: 225.9310 70.7317% 40.1961%;\n  --chart-1: 225.9310 70.7317% 40.1961%;\n  --chart-2: 160.1183 84.0796% 39.4118%;\n  --chart-3: 37.6923 92.1260% 50.1961%;\n  --chart-4: 258.3117 89.5349% 66.2745%;\n  --chart-5: 330.3659 81.1881% 60.3922%;\n  --radius: 0.5rem;\n  --sidebar: 222.2222 47.3684% 11.1765%;\n  --sidebar-foreground: 210.0000 40.0000% 98.0392%;\n  --sidebar-primary: 225.9310 70.7317% 40.1961%;\n  --sidebar-primary-foreground: 0 0% 100%;\n  --sidebar-accent: 217.2414 32.5843% 17.4510%;\n  --sidebar-accent-foreground: 210.0000 40.0000% 98.0392%;\n  --sidebar-border: 217.2414 32.5843% 17.4510%;\n  --sidebar-ring: 225.9310 70.7317% 40.1961%;\n  --font-sans: Inter, system-ui, sans-serif;\n  --font-serif: Georgia, serif;\n  --font-mono: Consolas, monospace;\n  --shadow-color: 223.3333 47.3684% 7.4510%;\n  --shadow-opacity: 0.08;\n  --shadow-blur: 16px;\n  --shadow-spread: 0px;\n  --shadow-offset-x: 0px;\n  --shadow-offset-y: 4px;\n  --letter-spacing: -0.01em;\n  --spacing: 1rem;\n  --shadow-2xs: 0px 4px 16px 0px hsl(223.3333 47.3684% 7.4510% / 0.04);\n  --shadow-xs: 0px 4px 16px 0px hsl(223.3333 47.3684% 7.4510% / 0.04);\n  --shadow-2xl: 0px 4px 16px 0px hsl(223.3333 47.3684% 7.4510% / 0.20);\n  --shadow-sm: 0px 4px 16px 0px hsl(223.3333 47.3684% 7.4510% / 0.08), 0px 1px 2px -1px hsl(223.3333 47.3684% 7.4510% / 0.08);\n  --shadow: 0px 4px 16px 0px hsl(223.3333 47.3684% 7.4510% / 0.08), 0px 1px 2px -1px hsl(223.3333 47.3684% 7.4510% / 0.08);\n  --shadow-md: 0px 4px 16px 0px hsl(223.3333 47.3684% 7.4510% / 0.08), 0px 2px 4px -1px hsl(223.3333 47.3684% 7.4510% / 0.08);\n  --shadow-lg: 0px 4px 16px 0px hsl(223.3333 47.3684% 7.4510% / 0.08), 0px 4px 6px -1px hsl(223.3333 47.3684% 7.4510% / 0.08);\n  --shadow-xl: 0px 4px 16px 0px hsl(223.3333 47.3684% 7.4510% / 0.08), 0px 8px 10px -1px hsl(223.3333 47.3684% 7.4510% / 0.08);\n}\n\n:root.dark {\n  --background: 223.3333 47.3684% 7.4510%;\n  --foreground: 210.0000 40.0000% 98.0392%;\n  --card: 217.2414 32.5843% 17.4510%;\n  --card-foreground: 210.0000 40.0000% 98.0392%;\n  --popover: 217.2414 32.5843% 17.4510%;\n  --popover-foreground: 210.0000 40.0000% 98.0392%;\n  --primary: 217.2193 91.2195% 59.8039%;\n  --primary-foreground: 0 0% 100%;\n  --secondary: 215.2941 25.0000% 26.6667%;\n  --secondary-foreground: 210.0000 40.0000% 98.0392%;\n  --muted: 217.2414 32.5843% 17.4510%;\n  --muted-foreground: 215.0000 20.2247% 65.0980%;\n  --accent: 160.1183 84.0796% 39.4118%;\n  --accent-foreground: 0 0% 100%;\n  --destructive: 0 90.6040% 70.7843%;\n  --destructive-foreground: 0 0% 100%;\n  --border: 215.2941 25.0000% 26.6667%;\n  --input: 215.2941 19.3182% 34.5098%;\n  --ring: 217.2193 91.2195% 59.8039%;\n  --chart-1: 217.2193 91.2195% 59.8039%;\n  --chart-2: 160.1183 84.0796% 39.4118%;\n  --chart-3: 43.2558 96.4126% 56.2745%;\n  --chart-4: 255.1351 91.7355% 76.2745%;\n  --chart-5: 328.6154 85.5263% 70.1961%;\n  --radius: 0.5rem;\n  --sidebar: 222.2222 47.3684% 11.1765%;\n  --sidebar-foreground: 210.0000 40.0000% 98.0392%;\n  --sidebar-primary: 217.2193 91.2195% 59.8039%;\n  --sidebar-primary-foreground: 0 0% 100%;\n  --sidebar-accent: 217.2414 32.5843% 17.4510%;\n  --sidebar-accent-foreground: 210.0000 40.0000% 98.0392%;\n  --sidebar-border: 217.2414 32.5843% 17.4510%;\n  --sidebar-ring: 217.2193 91.2195% 59.8039%;\n  --font-sans: Inter, system-ui, sans-serif;\n  --font-serif: Georgia, serif;\n  --font-mono: Consolas, monospace;\n  --shadow-color: 0 0% 0%;\n  --shadow-opacity: 0.3;\n  --shadow-blur: 20px;\n  --shadow-spread: 0px;\n  --shadow-offset-x: 0px;\n  --shadow-offset-y: 4px;\n  --letter-spacing: -0.01em;\n  --spacing: 1rem;\n  --shadow-2xs: 0px 4px 20px 0px hsl(0 0% 0% / 0.15);\n  --shadow-xs: 0px 4px 20px 0px hsl(0 0% 0% / 0.15);\n  --shadow-2xl: 0px 4px 20px 0px hsl(0 0% 0% / 0.75);\n  --shadow-sm: 0px 4px 20px 0px hsl(0 0% 0% / 0.30), 0px 1px 2px -1px hsl(0 0% 0% / 0.30);\n  --shadow: 0px 4px 20px 0px hsl(0 0% 0% / 0.30), 0px 1px 2px -1px hsl(0 0% 0% / 0.30);\n  --shadow-md: 0px 4px 20px 0px hsl(0 0% 0% / 0.30), 0px 2px 4px -1px hsl(0 0% 0% / 0.30);\n  --shadow-lg: 0px 4px 20px 0px hsl(0 0% 0% / 0.30), 0px 4px 6px -1px hsl(0 0% 0% / 0.30);\n  --shadow-xl: 0px 4px 20px 0px hsl(0 0% 0% / 0.30), 0px 8px 10px -1px hsl(0 0% 0% / 0.30);\n}";</script>
+    <script>
+      window.__BLOCKS_STANDALONE_ENTRY__ = true;
+    </script>
+    <script>
+      window.ENV = {
+        NODE_ENV: '__ENV__',
+      };
+    </script>
+    <script type="module" src="./src/main.tsx"></script>
+  </body>
+</html>

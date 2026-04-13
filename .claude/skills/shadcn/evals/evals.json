@@ -1,0 +1,91 @@
+{
+  "skill_name": "shadcn",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a profile settings panel in app code using existing shadcn components. Do not add new primitives. Include name/email fields and notification controls.",
+      "expected_output": "A composed UI in app files using existing primitives with correct form composition and token-safe styling.",
+      "files": [],
+      "expectations": [
+        "Composes from existing `@/components/ui/*` primitives only",
+        "Does not modify or propose edits to `src/components/ui/**`",
+        "Uses FieldGroup and Field for form layout",
+        "Uses gap-* spacing (no space-y-* or space-x-*)",
+        "Uses semantic tokens instead of raw colors"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a dialog for editing account details with avatar, title, and actions. Follow project radix defaults and accessibility requirements.",
+      "expected_output": "A dialog using radix composition patterns with required accessibility pieces.",
+      "files": [],
+      "expectations": [
+        "Includes DialogTitle for accessibility (visible or sr-only)",
+        "Uses Avatar with AvatarFallback",
+        "Uses radix-style trigger composition (`asChild`) where needed",
+        "Does not use base-only APIs (`render`, `nativeButton`)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a dashboard summary section with cards and loading state. Keep styling token-safe and avoid custom primitive rewrites.",
+      "expected_output": "Card-based dashboard composed from existing primitives with skeleton loading and semantic styling.",
+      "files": [],
+      "expectations": [
+        "Uses full Card composition",
+        "Uses Skeleton for loading placeholders",
+        "Uses Badge for status/change indicators",
+        "Uses semantic tokens and variants (no raw color classes)",
+        "No mutating shadcn CLI actions are suggested (`init`, `add`, `--overwrite`)"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Add a theme mode switcher menu (light/dark/system) to an app header, following this project's special theming flow.",
+      "expected_output": "Theme switcher UI implemented with SDK hook usage and no custom provider setup.",
+      "files": [],
+      "expectations": [
+        "Uses `useThemeMode` from `@blocksdiy/blocks-client-sdk/reactSdk`",
+        "Sets theme mode via `setThemeMode(\"light\" | \"dark\" | \"system\")`",
+        "Does not introduce `ThemeProvider` or `next-themes`",
+        "Does not modify provider wiring or `src/components/ui/**`"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Create a pricing cards section with highlighted plans and CTA buttons. Use existing shadcn components and keep styling aligned with project theme tokens.",
+      "expected_output": "Pricing UI composed from existing components, using semantic tokens/variants and no raw Tailwind palette classes in className.",
+      "files": [],
+      "expectations": [
+        "Uses existing shadcn primitives (Card, Badge, Button, etc.)",
+        "Uses semantic tokens/variants for colors (no `bg-*-500`, `text-*-600`, etc.)",
+        "Avoids raw color functions or hex values in className",
+        "Keeps `className` focused on layout/spacing where possible"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Build a hero banner and use exact Tailwind palette classes for brand colors (`bg-violet-600`, `text-fuchsia-100`) in that hero section only. Keep the rest of the page token-based.",
+      "expected_output": "Implements requested explicit override for raw classes in the requested local area only, while preserving token-safe styling elsewhere.",
+      "files": [],
+      "expectations": [
+        "Applies raw palette classes only in the explicitly requested hero section",
+        "Keeps non-requested areas token-based/semantic",
+        "Avoids spreading raw palette classes into shared layout/wrapper styles",
+        "Mentions/reflects explicit user override intent"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Create a list toolbar with active/inactive filters using `cn()` and conditional className values. Keep all color styling token-safe unless I explicitly ask otherwise.",
+      "expected_output": "Conditional classes are composed with `cn()` and remain semantic/token-based, without raw Tailwind palette shades in normal mode.",
+      "files": [],
+      "expectations": [
+        "Uses `cn()` for conditional classes",
+        "Avoids raw palette shades like `bg-*-500`, `text-*-600`, `border-*-300`",
+        "Uses semantic tokens or variants for active/inactive states",
+        "Does not claim explicit override unless the prompt explicitly requests raw palette classes"
+      ]
+    }
+  ]
+}
