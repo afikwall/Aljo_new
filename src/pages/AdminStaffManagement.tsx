@@ -76,6 +76,7 @@ export default function AdminStaffManagementPage() {
   // Filters
   const [roleTypeFilter, setRoleTypeFilter] = useState<string>("all");
   const [complianceFilter, setComplianceFilter] = useState<string>("all");
+  const [onboardingFilter, setOnboardingFilter] = useState<string>("all");
   const [emailSearch, setEmailSearch] = useState("");
 
   // Calculate document counts per staff
@@ -105,6 +106,10 @@ export default function AdminStaffManagementPage() {
       filtered = filtered.filter((s) => s.complianceStatus === complianceFilter);
     }
 
+    if (onboardingFilter !== "all") {
+      filtered = filtered.filter((s) => s.onboardingStatus === onboardingFilter);
+    }
+
     // Email search
     if (emailSearch.trim()) {
       const searchLower = emailSearch.toLowerCase();
@@ -120,7 +125,7 @@ export default function AdminStaffManagementPage() {
     }
 
     return filtered;
-  }, [staffProfiles, roleTypeFilter, complianceFilter, emailSearch]);
+  }, [staffProfiles, roleTypeFilter, complianceFilter, onboardingFilter, emailSearch]);
 
   // Get documents for the selected staff member
   const selectedStaffDocs = useMemo(() => {
@@ -232,7 +237,7 @@ export default function AdminStaffManagementPage() {
           <CardTitle className="text-lg">Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {/* Role Type Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Role Type</label>
@@ -263,6 +268,23 @@ export default function AdminStaffManagementPage() {
                   <SelectItem value="compliant">Compliant</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Onboarding Status Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Onboarding Status</label>
+              <Select value={onboardingFilter} onValueChange={setOnboardingFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="incomplete">Incomplete</SelectItem>
+                  <SelectItem value="pending_review">Pending Review</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
