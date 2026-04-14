@@ -362,6 +362,9 @@ export const RequiredDocumentCard = ({
                             setInlineExpiry(doc.id ?? "", date);
                             setInlineOpen(doc.id ?? "", false);
                           }}
+                          captionLayout="dropdown"
+                          fromYear={new Date().getFullYear()}
+                          toYear={new Date().getFullYear() + 10}
                           initialFocus
                         />
                       </PopoverContent>
@@ -433,6 +436,9 @@ export const RequiredDocumentCard = ({
                               setReplaceExpiry(doc.id ?? "", date);
                               setReplaceOpen(doc.id ?? "", false);
                             }}
+                            captionLayout="dropdown"
+                            fromYear={new Date().getFullYear()}
+                            toYear={new Date().getFullYear() + 10}
                             initialFocus
                           />
                         </PopoverContent>
