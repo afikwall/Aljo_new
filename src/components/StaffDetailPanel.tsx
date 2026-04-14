@@ -362,7 +362,6 @@ export function StaffDetailPanel({
   const [rejectingDocId, setRejectingDocId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [previewFile, setPreviewFile] = useState<{
-    blobUrl: string;
     signedUrl: string;
     name: string;
     isImage: boolean;
@@ -491,17 +490,7 @@ export function StaffDetailPanel({
       try {
         const result = await getSignedUrl({ fileUrl: doc.fileUrl });
         if (result?.signedUrl) {
-          const response = await fetch(result.signedUrl, {
-            credentials: "include",
-          });
-          if (!response.ok) {
-            toast.error("Failed to load document preview");
-            return;
-          }
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
           setPreviewFile({
-            blobUrl,
             signedUrl: result.signedUrl,
             name: doc.fileName || "Document",
             isImage: isImageFile(doc.fileUrl, doc.fileName),
@@ -883,9 +872,6 @@ export function StaffDetailPanel({
         open={!!previewFile}
         onOpenChange={(open) => {
           if (!open) {
-            if (previewFile?.blobUrl) {
-              URL.revokeObjectURL(previewFile.blobUrl);
-            }
             setPreviewFile(null);
           }
         }}
@@ -899,28 +885,23 @@ export function StaffDetailPanel({
               {previewFile.isImage ? (
                 <div className="flex items-center justify-center">
                   <img
-                    src={previewFile.blobUrl}
+                    src={previewFile.signedUrl}
                     alt={previewFile.name}
                     className="max-h-[70vh] w-full object-contain rounded-lg"
                   />
                 </div>
               ) : (
                 <iframe
-                  src={previewFile.blobUrl}
+                  src={previewFile.signedUrl}
                   title={previewFile.name}
                   className="w-full rounded-lg border"
                   style={{ height: "70vh", minHeight: "500px" }}
                 />
               )}
               <div className="flex justify-end">
-                <Button variant="outline" size="sm" asChild>
-                  <a
-                    href={previewFile.signedUrl}
-                    download={previewFile.name}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </a>
+                <Button variant="outline" size="sm" onClick={() => window.open(previewFile.signedUrl, '_blank')}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
                 </Button>
               </div>
             </div>
