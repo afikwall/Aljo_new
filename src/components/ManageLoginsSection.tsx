@@ -2,11 +2,13 @@ import { useState, useCallback, useMemo } from "react";
 import {
   useEntityGetAll,
   useEntityDelete,
+  useExecuteAction,
 } from "@blocksdiy/blocks-client-sdk/reactSdk";
 import {
   FacilityManagerProfilesEntity,
   UsersEntity,
   FacilitiesEntity,
+  InviteFacilityManagerAction,
 } from "@/product-types";
 import {
   Card,
@@ -44,6 +46,9 @@ export const ManageLoginsSection = ({
   const { data: facilities } = useEntityGetAll(FacilitiesEntity);
   const { deleteFunction: deleteFMProfile, isLoading: isDeletingFM } =
     useEntityDelete(FacilityManagerProfilesEntity);
+
+  const { executeFunction: executeInvite } = useExecuteAction(InviteFacilityManagerAction);
+  const [resendingEmails, setResendingEmails] = useState<Set<string>>(new Set());
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [removeDialogState, setRemoveDialogState] = useState<{
@@ -132,6 +137,26 @@ export const ManageLoginsSection = ({
     refetchFMProfiles,
   ]);
 
+  const handleResendInvite = useCallback(async (email: string) => {
+    setResendingEmails((prev) => new Set(prev).add(email));
+    try {
+      await executeInvite({
+        email,
+        facilityProfileId: facilityId,
+        facilityName,
+      });
+      toast.success(`Invite resent to ${email}`);
+    } catch {
+      toast.error("Failed to resend invite");
+    } finally {
+      setResendingEmails((prev) => {
+        const next = new Set(prev);
+        next.delete(email);
+        return next;
+      });
+    }
+  }, [executeInvite, facilityId, facilityName]);
+
   const handleAddSuccess = useCallback(() => {
     refetchFMProfiles();
   }, [refetchFMProfiles]);
@@ -190,6 +215,8 @@ export const ManageLoginsSection = ({
                       email: fm.email || "",
                     })
                   }
+                  onResendInvite={() => fm.email && handleResendInvite(fm.email)}
+                  isResending={resendingEmails.has(fm.email || "")}
                 />
               ))}
             </div>
