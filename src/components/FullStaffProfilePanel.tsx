@@ -442,12 +442,7 @@ export const FullStaffProfilePanel = ({
       try {
         const result = await getSignedUrl({ fileUrl: doc.fileUrl });
         if (result?.signedUrl) {
-          const anchor = document.createElement("a");
-          anchor.href = result.signedUrl;
-          anchor.download = doc.fileName || "document";
-          document.body.appendChild(anchor);
-          anchor.click();
-          document.body.removeChild(anchor);
+          window.open(result.signedUrl, '_blank');
         } else {
           toast.error("Failed to download document");
         }
@@ -1493,7 +1488,8 @@ export const FullStaffProfilePanel = ({
                 <Button variant="outline" size="sm" asChild>
                   <a
                     href={previewFile.signedUrl}
-                    download={previewFile.name}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download
