@@ -236,9 +236,11 @@ export const FullStaffProfilePanel = ({
   const [rejectingDocId, setRejectingDocId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [previewFile, setPreviewFile] = useState<{
-    signedUrl: string;
+    blobUrl: string;
     name: string;
+    mimeType: string;
     isImage: boolean;
+    isPdf: boolean;
   } | null>(null);
   const [loadingPreviewId, setLoadingPreviewId] = useState<string | null>(null);
   const [loadingDownloadId, setLoadingDownloadId] = useState<string | null>(null);
@@ -411,21 +413,42 @@ export const FullStaffProfilePanel = ({
     [updateDocument, rejectionReason, onRefresh]
   );
 
+  const getFileExtension = (url?: string, fileName?: string): string => {
+    const name = fileName || url || "";
+    const match = name.match(/\.(\w+)(?:\?|$)/);
+    return match ? match[1].toLowerCase() : "";
+  };
+
+  const detectFileType = (mimeType: string, url?: string, fileName?: string) => {
+    const ext = getFileExtension(url, fileName);
+    const imageExts = ["jpg", "jpeg", "png", "gif", "webp"];
+    const isImage = mimeType?.startsWith("image/") || imageExts.includes(ext);
+    const isPdf = mimeType === "application/pdf" || ext === "pdf";
+    return { isImage, isPdf };
+  };
+
   const handleViewDocument = useCallback(
     async (doc: IStaffDocumentsEntity & { id: string }) => {
       if (!doc.fileUrl) return;
       setLoadingPreviewId(doc.id);
       try {
         const result = await getSignedUrl({ fileUrl: doc.fileUrl });
-        if (result?.signedUrl) {
-          setPreviewFile({
-            signedUrl: result.signedUrl,
-            name: doc.fileName || "Document",
-            isImage: isImageFile(doc.fileUrl, doc.fileName),
-          });
-        } else {
+        if (!result?.signedUrl) {
           toast.error("Failed to load document preview");
+          return;
         }
+        const response = await fetch(result.signedUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const contentType = response.headers.get("Content-Type") || "";
+        const { isImage, isPdf } = detectFileType(contentType, doc.fileUrl, doc.fileName);
+        setPreviewFile({
+          blobUrl,
+          name: doc.fileName || "Document",
+          mimeType: contentType,
+          isImage,
+          isPdf,
+        });
       } catch {
         toast.error("Failed to load document preview");
       } finally {
@@ -441,11 +464,20 @@ export const FullStaffProfilePanel = ({
       setLoadingDownloadId(doc.id);
       try {
         const result = await getSignedUrl({ fileUrl: doc.fileUrl });
-        if (result?.signedUrl) {
-          window.open(result.signedUrl, '_blank');
-        } else {
+        if (!result?.signedUrl) {
           toast.error("Failed to download document");
+          return;
         }
+        const response = await fetch(result.signedUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = doc.fileName || "Document";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
       } catch {
         toast.error("Failed to download document");
       } finally {
@@ -1518,6 +1550,9 @@ export const FullStaffProfilePanel = ({
         open={!!previewFile}
         onOpenChange={(open) => {
           if (!open) {
+            if (previewFile?.blobUrl) {
+              URL.revokeObjectURL(previewFile.blobUrl);
+            }
             setPreviewFile(null);
           }
         }}
@@ -1527,33 +1562,43 @@ export const FullStaffProfilePanel = ({
             <DialogTitle className="truncate">{previewFile?.name}</DialogTitle>
           </DialogHeader>
           {previewFile && (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {previewFile.isImage ? (
                 <div className="flex items-center justify-center">
                   <img
-                    src={previewFile.signedUrl}
+                    src={previewFile.blobUrl}
                     alt={previewFile.name}
                     className="max-h-[70vh] w-full object-contain rounded-lg"
                   />
                 </div>
-              ) : (
+              ) : previewFile.isPdf ? (
                 <iframe
-                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.signedUrl)}&embedded=true`}
+                  src={previewFile.blobUrl}
                   title={previewFile.name}
                   className="w-full rounded-lg border"
                   style={{ height: "70vh", minHeight: "500px" }}
                 />
+              ) : (
+                <div className="flex h-[300px] flex-col items-center justify-center gap-3 rounded-lg border bg-muted/20">
+                  <FileText className="h-12 w-12 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">This file type cannot be previewed</p>
+                </div>
               )}
               <div className="flex justify-end">
-                <Button variant="outline" size="sm" asChild>
-                  <a
-                    href={previewFile.signedUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </a>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const a = document.createElement("a");
+                    a.href = previewFile.blobUrl;
+                    a.download = previewFile.name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
                 </Button>
               </div>
             </div>
