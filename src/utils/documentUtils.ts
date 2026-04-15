@@ -8,19 +8,23 @@ import { isPast, parseISO } from "date-fns";
 // --- Document Type Constants ---
 
 export const BASE_DOCUMENT_TYPES: StaffDocumentsEntityDocumentTypeEnum[] = [
-  "government_id",
-  "background_check",
-  "tb_test",
+  "contractor_letter",
+  "resume",
+  "police_check",
+  "work_permit",
+  "sin_copy",
   "covid_vaccination",
+  "photo_id",
+  "void_cheque",
 ];
 
 export const ROLE_ADDITIONAL_DOCS: Record<
   string,
   StaffDocumentsEntityDocumentTypeEnum[]
 > = {
-  RN: ["nursing_license", "cpr_certification"],
-  LPN: ["nursing_license", "cpr_certification"],
-  CCA: ["cpr_certification"],
+  RN: ["nursing_license", "cpr_certification", "liability_coverage"],
+  LPN: ["nursing_license", "cpr_certification", "liability_coverage"],
+  CCA: ["cca_certificate", "cpr_certification"],
   CITR: [],
 };
 
@@ -28,12 +32,21 @@ export const DOCUMENT_TYPE_LABELS: Record<
   StaffDocumentsEntityDocumentTypeEnum,
   string
 > = {
+  contractor_letter: "Signed Independent Contractor Letter",
+  resume: "Resume",
+  nursing_license: "NSCN Registration",
+  cpr_certification: "CPR/First Aid",
+  liability_coverage: "Letter of Professional Liability Coverage",
+  police_check: "Vulnerability Sector Police Check",
+  work_permit: "Work Permit / PR Card",
+  sin_copy: "Copy of SIN",
+  covid_vaccination: "Proof of COVID Vaccination",
+  photo_id: "Photo ID (Driver's License)",
+  void_cheque: "Void Cheque / Direct Deposit Form",
+  cca_certificate: "CCA Registry / CCA Certificate",
   government_id: "Government ID",
   background_check: "Background Check",
   tb_test: "TB Test",
-  covid_vaccination: "COVID Vaccination",
-  nursing_license: "Nursing License",
-  cpr_certification: "CPR Certification",
 };
 
 // Document types that typically have expiry dates
@@ -41,7 +54,9 @@ const EXPIRY_DATE_DOC_TYPES: StaffDocumentsEntityDocumentTypeEnum[] = [
   "nursing_license",
   "cpr_certification",
   "covid_vaccination",
-  "tb_test",
+  "liability_coverage",
+  "work_permit",
+  "cca_certificate",
 ];
 
 /**
@@ -61,12 +76,21 @@ export const DOCUMENT_TYPE_TO_CATEGORY: Record<
   StaffDocumentsEntityDocumentTypeEnum,
   StaffDocumentsEntityDocumentCategoryEnum
 > = {
+  contractor_letter: "other",
+  resume: "other",
+  nursing_license: "certification",
+  cpr_certification: "certification",
+  liability_coverage: "certification",
+  police_check: "identification",
+  work_permit: "identification",
+  sin_copy: "identification",
+  covid_vaccination: "medical",
+  photo_id: "identification",
+  void_cheque: "other",
+  cca_certificate: "certification",
   government_id: "identification",
   background_check: "identification",
   tb_test: "medical",
-  covid_vaccination: "medical",
-  nursing_license: "certification",
-  cpr_certification: "certification",
 };
 
 // --- Optional Document Category Options ---

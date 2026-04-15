@@ -733,12 +733,21 @@ export const StaffAvailabilityEntity = {
 } as const;
 
 export type StaffDocumentsEntityDocumentTypeEnum =
+  | "contractor_letter"
+  | "resume"
+  | "nursing_license"
+  | "cpr_certification"
+  | "liability_coverage"
+  | "police_check"
+  | "work_permit"
+  | "sin_copy"
+  | "covid_vaccination"
+  | "photo_id"
+  | "void_cheque"
+  | "cca_certificate"
   | "government_id"
   | "background_check"
-  | "tb_test"
-  | "covid_vaccination"
-  | "nursing_license"
-  | "cpr_certification";
+  | "tb_test";
 
 export type StaffDocumentsEntityDocumentCategoryEnum =
   | "identification"
