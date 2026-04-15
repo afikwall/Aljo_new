@@ -1,4 +1,4 @@
-import { useEntityGetAll, useEntityUpdate } from "@blocksdiy/blocks-client-sdk/reactSdk";
+import { useEntityGetAll, useEntityGetOne, useEntityUpdate } from "@blocksdiy/blocks-client-sdk/reactSdk";
 import { AppSettingsEntity, FacilitiesEntity } from "@/product-types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,11 @@ export const GeofenceSettingsCard = ({
   facility,
   facilityProfileId,
 }: GeofenceSettingsCardProps) => {
+  const { data: liveFacility, refetch: refetchFacility } = useEntityGetOne(
+    FacilitiesEntity,
+    { id: facilityProfileId },
+    { enabled: !!facilityProfileId }
+  );
   const { data: appSettingsRaw } = useEntityGetAll(AppSettingsEntity);
   const { updateFunction: updateFacility, isLoading: isUpdating } =
     useEntityUpdate(FacilitiesEntity);
@@ -32,12 +37,15 @@ export const GeofenceSettingsCard = ({
   );
   const geotrackingEnabled = geotrackingSetting?.settingValue ?? true;
 
-  const mode = facility?.geofenceMode || "off";
-  const radius = facility?.geofenceRadius || 200;
+  const resolvedFacility = liveFacility ?? facility;
+  const mode = resolvedFacility?.geofenceMode || "off";
+  const radius = resolvedFacility?.geofenceRadius || 200;
+  const lat = resolvedFacility?.latitude;
+  const lng = resolvedFacility?.longitude;
   const hasCoords =
-    facility?.latitude != null &&
-    facility?.longitude != null &&
-    !(facility.latitude === 0 && facility.longitude === 0);
+    lat != null &&
+    lng != null &&
+    !(lat === 0 && lng === 0);
 
   const isEnabled = mode === "flag" || mode === "strict";
 
@@ -49,6 +57,7 @@ export const GeofenceSettingsCard = ({
           geofenceMode: checked ? "flag" : "off",
         },
       });
+      await refetchFacility();
       toast.success(
         checked ? "Geofence enabled (flag mode)" : "Geofence disabled"
       );
@@ -111,8 +120,8 @@ export const GeofenceSettingsCard = ({
 
         {hasCoords ? (
           <GeofenceMapPreview
-            latitude={facility.latitude}
-            longitude={facility.longitude}
+            latitude={lat}
+            longitude={lng}
             radiusMeters={radius}
             height="200px"
           />
