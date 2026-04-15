@@ -123,7 +123,7 @@ const DocumentPreviewDialog = ({
               />
             ) : (
               <iframe
-                src={signedUrl}
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(signedUrl)}&embedded=true`}
                 title={fileName || "Document"}
                 className="w-full h-[500px] border-0"
               />
