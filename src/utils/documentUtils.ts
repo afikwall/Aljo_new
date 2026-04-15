@@ -7,25 +7,14 @@ import { isPast, parseISO } from "date-fns";
 
 // --- Document Type Constants ---
 
-export const BASE_DOCUMENT_TYPES: StaffDocumentsEntityDocumentTypeEnum[] = [
-  "contractor_letter",
-  "resume",
-  "police_check",
-  "work_permit",
-  "sin_copy",
-  "covid_vaccination",
-  "photo_id",
-  "void_cheque",
-];
-
-export const ROLE_ADDITIONAL_DOCS: Record<
+export const REQUIRED_DOCS_BY_ROLE: Record<
   string,
   StaffDocumentsEntityDocumentTypeEnum[]
 > = {
-  RN: ["nursing_license", "cpr_certification", "liability_coverage"],
-  LPN: ["nursing_license", "cpr_certification", "liability_coverage"],
-  CCA: ["cca_certificate", "cpr_certification"],
-  CITR: [],
+  RN: ["contractor_letter", "resume", "nursing_license", "cpr_certification", "liability_coverage", "police_check", "work_permit", "sin_copy", "covid_vaccination", "photo_id", "void_cheque"],
+  LPN: ["contractor_letter", "resume", "nursing_license", "cpr_certification", "liability_coverage", "police_check", "work_permit", "sin_copy", "covid_vaccination", "photo_id", "void_cheque"],
+  CCA: ["contractor_letter", "resume", "cca_certificate", "cpr_certification", "police_check", "work_permit", "sin_copy", "covid_vaccination", "photo_id", "void_cheque"],
+  CITR: ["contractor_letter", "resume", "police_check", "work_permit", "sin_copy", "covid_vaccination", "photo_id", "void_cheque"],
 };
 
 export const DOCUMENT_TYPE_LABELS: Record<
@@ -49,24 +38,10 @@ export const DOCUMENT_TYPE_LABELS: Record<
   tb_test: "TB Test",
 };
 
-// Document types that typically have expiry dates
-const EXPIRY_DATE_DOC_TYPES: StaffDocumentsEntityDocumentTypeEnum[] = [
-  "nursing_license",
-  "cpr_certification",
-  "covid_vaccination",
-  "liability_coverage",
-  "work_permit",
-  "cca_certificate",
-];
-
 /**
- * Returns hint text for the expiry date field based on document type.
- * Docs that typically expire get a specific hint; others get a generic one.
+ * Returns hint text for the expiry date field.
  */
-export function getExpiryHintText(docType: StaffDocumentsEntityDocumentTypeEnum): string {
-  if (EXPIRY_DATE_DOC_TYPES.includes(docType)) {
-    return "e.g. license expiry, CPR renewal date";
-  }
+export function getExpiryHintText(_docType: StaffDocumentsEntityDocumentTypeEnum): string {
   return "Optional — add if your document has an expiry date";
 }
 
@@ -184,8 +159,7 @@ export function getCardStatus(
 export function getRequiredDocTypesForRole(
   roleType?: string
 ): StaffDocumentsEntityDocumentTypeEnum[] {
-  const additional = ROLE_ADDITIONAL_DOCS[roleType || ""] || [];
-  return [...BASE_DOCUMENT_TYPES, ...additional];
+  return REQUIRED_DOCS_BY_ROLE[roleType || ""] || REQUIRED_DOCS_BY_ROLE["CITR"];
 }
 
 /**
