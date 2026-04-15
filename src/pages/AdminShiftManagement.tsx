@@ -1,8 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   useEntityGetAll,
-  useEntityCreate,
-  useEntityUpdate,
   useExecuteAction,
   useUser,
 } from "@blocksdiy/blocks-client-sdk/reactSdk";
@@ -12,7 +10,6 @@ import {
   StaffProfilesEntity,
   ShiftApplicationsEntity,
   AdminAssignStaffToShiftAction,
-  AppSettingsEntity,
 } from "@/product-types";
 import type {
   IShiftsEntity,
@@ -22,8 +19,7 @@ import type {
 } from "@/product-types";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarCheck, ClipboardList, MapPin, MapPinOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CalendarCheck, ClipboardList } from "lucide-react";
 import { parseISO } from "date-fns";
 import { AdminShiftCard } from "@/components/AdminShiftCard";
 import { AssignStaffModal } from "@/components/AssignStaffModal";
@@ -54,15 +50,9 @@ export default function AdminShiftManagement() {
     isLoading: isLoadingApplications,
     refetch: refetchApplications,
   } = useEntityGetAll(ShiftApplicationsEntity);
-  const { data: appSettingsRaw, isLoading: isLoadingSettings } =
-    useEntityGetAll(AppSettingsEntity);
-
   // Action
   const { executeFunction: executeAssign, isLoading: isExecutingAction } =
     useExecuteAction(AdminAssignStaffToShiftAction);
-  const { createFunction: createSetting } = useEntityCreate(AppSettingsEntity);
-  const { updateFunction: updateSetting, isLoading: isUpdatingSetting } =
-    useEntityUpdate(AppSettingsEntity);
 
   // Filter state
   const [filters, setFilters] = useState<ShiftFiltersState>({
@@ -101,14 +91,6 @@ export default function AdminShiftManagement() {
     () => (applicationsRaw as ApplicationWithId[] | undefined) || [],
     [applicationsRaw]
   );
-
-  // Geotracking setting
-  const geotrackingSetting = useMemo(() => {
-    const settings = appSettingsRaw as Array<typeof AppSettingsEntity['instanceType'] & { id: string }> | undefined;
-    return settings?.find((s) => s.settingKey === "geotrackingEnabled");
-  }, [appSettingsRaw]);
-
-  const geotrackingEnabled = geotrackingSetting?.settingValue ?? true;
 
   // Lookup maps
   const facilityMap = useMemo(() => {
@@ -253,33 +235,6 @@ export default function AdminShiftManagement() {
     }
   }, [unassignTarget, executeAssign, user.email, refetchShifts, refetchApplications]);
 
-  const handleToggleGeotracking = useCallback(async () => {
-    const newValue = !geotrackingEnabled;
-    try {
-      if (geotrackingSetting) {
-        await updateSetting({
-          id: geotrackingSetting.id,
-          data: {
-            settingValue: newValue,
-            updatedByEmail: user.email || "",
-          },
-        });
-      } else {
-        await createSetting({
-          data: {
-            settingKey: "geotrackingEnabled",
-            settingValue: newValue,
-            updatedByEmail: user.email || "",
-            description: "Controls GPS geofence validation on staff clock-in",
-          },
-        });
-      }
-      toast.success(newValue ? "Geotracking enabled" : "Geotracking disabled");
-    } catch (err) {
-      toast.error("Failed to update geotracking setting");
-    }
-  }, [geotrackingEnabled, geotrackingSetting, updateSetting, createSetting, user.email]);
-
   const isLoading =
     isLoadingShifts || isLoadingFacilities || isLoadingStaff || isLoadingApplications;
 
@@ -292,44 +247,14 @@ export default function AdminShiftManagement() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <CalendarCheck className="h-6 w-6" />
-            Shift Management
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            View all shifts and manually assign or unassign staff.
-          </p>
-        </div>
-
-        {/* Geotracking Toggle */}
-        <div className="flex flex-col items-end gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleToggleGeotracking}
-            disabled={isUpdatingSetting || isLoadingSettings}
-            className={
-              geotrackingEnabled
-                ? "bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20 hover:text-green-600"
-                : "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20 hover:text-destructive"
-            }
-          >
-            {geotrackingEnabled ? (
-              <>
-                <MapPin className="h-4 w-4 mr-2" />
-                Geotracking: ON
-              </>
-            ) : (
-              <>
-                <MapPinOff className="h-4 w-4 mr-2" />
-                Geotracking: OFF
-              </>
-            )}
-          </Button>
-          <p className="text-xs text-muted-foreground">GPS clock-in validation</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <CalendarCheck className="h-6 w-6" />
+          Shift Management
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          View all shifts and manually assign or unassign staff.
+        </p>
       </div>
 
       {/* Filters */}

@@ -1,4 +1,4 @@
-import { CheckCircle, Info } from "lucide-react";
+import { CheckCircle, Info, AlertTriangle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { calculateBreak } from "@/utils/shiftUtils";
 import { getElapsedHours } from "@/utils/clockInOutUtils";
@@ -8,6 +8,7 @@ interface InProgressShiftBannerProps {
   shiftEndDateTime: string;
   clockInTime: string;
   currentTime: Date;
+  geofenceStatus?: string;
 }
 
 export const InProgressShiftBanner = ({
@@ -15,6 +16,7 @@ export const InProgressShiftBanner = ({
   shiftEndDateTime,
   clockInTime,
   currentTime,
+  geofenceStatus,
 }: InProgressShiftBannerProps) => {
   const endTimeFormatted = (() => {
     try {
@@ -46,6 +48,14 @@ export const InProgressShiftBanner = ({
           Your {breakMinutes}-minute unpaid break will be auto-deducted from your total hours.
         </p>
       </div>
+      {geofenceStatus === "outside_flagged" && (
+        <div className="flex items-center gap-2 mt-3 ml-7 rounded-md bg-chart-3/10 border border-chart-3/20 px-3 py-2">
+          <AlertTriangle className="h-4 w-4 text-chart-3 shrink-0" />
+          <p className="text-xs text-chart-3 font-medium">
+            Clocked in outside geofence area
+          </p>
+        </div>
+      )}
     </div>
   );
 };

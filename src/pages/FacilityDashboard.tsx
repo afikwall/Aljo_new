@@ -38,6 +38,7 @@ import { FacilityShiftCard, EmptyShiftCard } from "@/components/FacilityShiftCar
 import { ShiftFilters } from "@/components/ShiftFilters";
 import { EditShiftSheet } from "@/components/EditShiftSheet";
 import { AutoScheduleSettingsCard } from "@/components/AutoScheduleSettingsCard";
+import { GeofenceSettingsCard } from "@/components/GeofenceSettingsCard";
 import { FacilityRatesSection } from "@/components/FacilityRatesSection";
 import { getPageUrl } from "@/lib/utils";
 import { toast } from "sonner";
@@ -384,6 +385,20 @@ export default function FacilityDashboardPage() {
         <AutoScheduleSettingsCard
           managerProfile={managerProfile as typeof managerProfile & { id: string }}
           onSettingsSaved={() => refetchShifts()}
+        />
+      )}
+
+      {/* Geofence Settings */}
+      {facility && facilityProfileId && (
+        <GeofenceSettingsCard
+          facility={{
+            id: facilityProfileId,
+            latitude: facility.latitude,
+            longitude: facility.longitude,
+            geofenceRadius: facility.geofenceRadius,
+            geofenceMode: facility.geofenceMode,
+          }}
+          facilityProfileId={facilityProfileId}
         />
       )}
 

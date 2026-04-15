@@ -1,5 +1,5 @@
 import { useEntityGetAll, useEntityCreate, useEntityUpdate, useUser } from "@blocksdiy/blocks-client-sdk/reactSdk";
-import { FacilitiesEntity, StaffRatesEntity, BillingRatesEntity, FacilityManagerProfilesEntity } from "@/product-types";
+import { FacilitiesEntity, StaffRatesEntity, BillingRatesEntity, FacilityManagerProfilesEntity, AppSettingsEntity } from "@/product-types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,9 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Building2, DollarSign, UserCheck, Receipt, Plus, Edit2, ChevronRight, Lock, FileText } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Building2, DollarSign, UserCheck, Receipt, Plus, Edit2, ChevronRight, Lock, FileText, MapPin, MapPinOff, AlertTriangle, Search, Loader2 } from "lucide-react";
+import { GeofenceMapPreview } from "@/components/GeofenceMapPreview";
 import { useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
@@ -49,6 +51,15 @@ export default function AdminFacilityManagementPage() {
   const { data: staffRates, isLoading: loadingStaffRates, refetch: refetchStaffRates } = useEntityGetAll(StaffRatesEntity);
   const { data: billingRates, isLoading: loadingBillingRates, refetch: refetchBillingRates } = useEntityGetAll(BillingRatesEntity);
   const { data: fmProfiles, isLoading: loadingFMProfiles, refetch: refetchFMProfiles } = useEntityGetAll(FacilityManagerProfilesEntity);
+  const { data: appSettingsRaw, isLoading: loadingSettings } = useEntityGetAll(AppSettingsEntity);
+  const { createFunction: createSetting } = useEntityCreate(AppSettingsEntity);
+  const { updateFunction: updateSetting, isLoading: isUpdatingSetting } = useEntityUpdate(AppSettingsEntity);
+
+  const geotrackingSetting = useMemo(() => {
+    const settings = appSettingsRaw as Array<typeof AppSettingsEntity['instanceType'] & { id: string }> | undefined;
+    return settings?.find((s) => s.settingKey === "geotrackingEnabled");
+  }, [appSettingsRaw]);
+  const geotrackingEnabled = geotrackingSetting?.settingValue ?? true;
 
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
   const [activeDetailTab, setActiveDetailTab] = useState("logins");
@@ -75,7 +86,13 @@ export default function AdminFacilityManagementPage() {
     contactPhone: "",
     address: "",
     notes: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
+    geofenceRadius: 200,
+    geofenceMode: "off" as "strict" | "flag" | "off",
   });
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [lastGeocodedAddress, setLastGeocodedAddress] = useState("");
 
   const [staffRateForm, setStaffRateForm] = useState({
     roleType: "RN" as "RN" | "LPN" | "CCA" | "CITR",
@@ -123,6 +140,61 @@ export default function AdminFacilityManagementPage() {
     return (fmProfiles || []).map((p) => ({ ...p, id: p.id }));
   }, [fmProfiles]);
 
+  const handleToggleGeotracking = async () => {
+    const newValue = !geotrackingEnabled;
+    try {
+      if (geotrackingSetting) {
+        await updateSetting({
+          id: geotrackingSetting.id,
+          data: {
+            settingValue: newValue,
+            updatedByEmail: user.email || "",
+          },
+        });
+      } else {
+        await createSetting({
+          data: {
+            settingKey: "geotrackingEnabled",
+            settingValue: newValue,
+            updatedByEmail: user.email || "",
+            description: "Controls GPS geofence validation on staff clock-in",
+          },
+        });
+      }
+      toast.success(newValue ? "Geotracking enabled" : "Geotracking disabled");
+    } catch {
+      toast.error("Failed to update geotracking setting");
+    }
+  };
+
+  const handleGeocodeAddress = async () => {
+    if (!facilityForm.address) {
+      toast.error("Please enter an address first");
+      return;
+    }
+    setIsGeocoding(true);
+    try {
+      const query = [facilityForm.address, facilityForm.city, facilityForm.province].filter(Boolean).join(", ");
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`
+      );
+      const results = await response.json();
+      if (results?.length > 0) {
+        const lat = parseFloat(results[0].lat);
+        const lng = parseFloat(results[0].lon);
+        setFacilityForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+        setLastGeocodedAddress(facilityForm.address);
+        toast.success("Coordinates found");
+      } else {
+        toast.error("No results found for this address");
+      }
+    } catch {
+      toast.error("Geocoding failed. Please try again.");
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const handleOpenAddFacility = () => {
     setEditingFacility(null);
     setFacilityForm({
@@ -135,7 +207,12 @@ export default function AdminFacilityManagementPage() {
       contactPhone: "",
       address: "",
       notes: "",
+      latitude: null,
+      longitude: null,
+      geofenceRadius: 200,
+      geofenceMode: "off",
     });
+    setLastGeocodedAddress("");
     setFacilityDialogOpen(true);
   };
 
@@ -151,7 +228,12 @@ export default function AdminFacilityManagementPage() {
       contactPhone: facility.contactPhone || "",
       address: facility.address || "",
       notes: facility.notes || "",
+      latitude: facility.latitude ?? null,
+      longitude: facility.longitude ?? null,
+      geofenceRadius: facility.geofenceRadius || 200,
+      geofenceMode: (facility.geofenceMode as "strict" | "flag" | "off") || "off",
     });
+    setLastGeocodedAddress(facility.address || "");
     setFacilityDialogOpen(true);
   };
 
@@ -161,22 +243,46 @@ export default function AdminFacilityManagementPage() {
       return;
     }
 
+    if (facilityForm.geofenceRadius < 50 || facilityForm.geofenceRadius > 2000) {
+      toast.error("Geofence radius must be between 50 and 2000 meters");
+      return;
+    }
+
+    // Treat 0,0 as not configured
+    const lat = (facilityForm.latitude === 0 && facilityForm.longitude === 0) ? null : facilityForm.latitude;
+    const lng = (facilityForm.latitude === 0 && facilityForm.longitude === 0) ? null : facilityForm.longitude;
+
+    const saveData = {
+      name: facilityForm.name,
+      city: facilityForm.city,
+      province: facilityForm.province,
+      status: facilityForm.status,
+      contactName: facilityForm.contactName,
+      contactEmail: facilityForm.contactEmail,
+      contactPhone: facilityForm.contactPhone,
+      address: facilityForm.address,
+      notes: facilityForm.notes,
+      latitude: lat,
+      longitude: lng,
+      geofenceRadius: facilityForm.geofenceRadius,
+      geofenceMode: facilityForm.geofenceMode,
+    };
+
     try {
       if (editingFacility) {
         await updateFacility({
           id: editingFacility.id,
-          data: facilityForm,
+          data: saveData,
         });
         toast.success("Facility updated successfully");
       } else {
-        await createFacility({ data: facilityForm });
+        await createFacility({ data: saveData });
         toast.success("Facility created successfully");
       }
       setFacilityDialogOpen(false);
       refetchFacilities();
-    } catch (error) {
+    } catch {
       toast.error("Failed to save facility");
-      console.error(error);
     }
   };
 
@@ -293,7 +399,36 @@ export default function AdminFacilityManagementPage() {
 
   return (
     <div className="space-y-6">
+      {/* Global Geotracking Card */}
+      <Card className={geotrackingEnabled ? "border-l-4 border-l-primary" : "border-l-4 border-l-chart-3"}>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <MapPin className={geotrackingEnabled ? "text-primary" : "text-chart-3"} />
+              <div>
+                <h3 className="font-semibold">GPS Geotracking</h3>
+                <p className="text-sm text-muted-foreground">
+                  Master switch — when off, staff can clock in/out without GPS checks at all facilities.
+                </p>
+                {geotrackingSetting?.updatedByEmail && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Last updated by: {geotrackingSetting.updatedByEmail}
+                    {geotrackingSetting.updatedAt ? ` on ${new Date(geotrackingSetting.updatedAt).toLocaleDateString()}` : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+            <Switch
+              checked={geotrackingEnabled}
+              onCheckedChange={() => handleToggleGeotracking()}
+              disabled={isUpdatingSetting || loadingSettings}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header */}
+      <div className={geotrackingEnabled ? "" : "opacity-50 pointer-events-none"}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Facility Management</h1>
@@ -340,7 +475,7 @@ export default function AdminFacilityManagementPage() {
                       {facility.city}{facility.province ? `, ${facility.province}` : ""}
                     </p>
                     <FMCountBadge count={fmCountMap.get(facility.id) || 0} className="mt-1" />
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <Badge
                         className={
                           facility.status === "active"
@@ -350,6 +485,22 @@ export default function AdminFacilityManagementPage() {
                       >
                         {facility.status === "active" ? "Active" : "Inactive"}
                       </Badge>
+                      {facility.latitude === 0 && facility.longitude === 0 ? (
+                        <Badge className="bg-chart-3/20 text-chart-3">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          0,0 coords
+                        </Badge>
+                      ) : facility.latitude != null && facility.longitude != null && (facility.geofenceMode === "strict" || facility.geofenceMode === "flag") ? (
+                        <Badge className="bg-accent/20 text-accent">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          Geofence
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-muted text-muted-foreground">
+                          <MapPinOff className="h-3 w-3 mr-1" />
+                          No fence
+                        </Badge>
+                      )}
                       {facility.contactName && (
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <UserCheck className="h-3 w-3" />
@@ -374,6 +525,7 @@ export default function AdminFacilityManagementPage() {
                 <TableHead>City</TableHead>
                 <TableHead>Province</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Geofence</TableHead>
                 <TableHead>Managers</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead className="w-12"></TableHead>
@@ -401,6 +553,24 @@ export default function AdminFacilityManagementPage() {
                     >
                       {facility.status === "active" ? "Active" : "Inactive"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {facility.latitude === 0 && facility.longitude === 0 ? (
+                      <span className="flex items-center gap-1 text-chart-3 text-xs">
+                        <AlertTriangle className="h-3 w-3" />
+                        0,0
+                      </span>
+                    ) : facility.latitude != null && facility.longitude != null && (facility.geofenceMode === "strict" || facility.geofenceMode === "flag") ? (
+                      <Badge className="bg-accent/20 text-accent">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {facility.geofenceMode}
+                      </Badge>
+                    ) : (
+                      <span className="flex items-center gap-1 text-muted-foreground text-xs">
+                        <MapPinOff className="h-3 w-3" />
+                        Off
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <FMCountBadge count={fmCountMap.get(facility.id) || 0} />
@@ -688,6 +858,8 @@ export default function AdminFacilityManagementPage() {
         </div>
       )}
 
+      </div>{/* end geotracking opacity wrapper */}
+
       {/* Add/Edit Facility Dialog */}
       <Dialog open={facilityDialogOpen} onOpenChange={setFacilityDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -813,6 +985,106 @@ export default function AdminFacilityManagementPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Geofence Configuration Section */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-sm">Geofence Configuration</h3>
+
+              {/* Lookup Coordinates Button */}
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGeocodeAddress}
+                  disabled={isGeocoding || !facilityForm.address}
+                >
+                  {isGeocoding ? (
+                    <Loader2 className="animate-spin" data-icon="inline-start" />
+                  ) : (
+                    <Search data-icon="inline-start" />
+                  )}
+                  Lookup Coordinates
+                </Button>
+                {facilityForm.address && facilityForm.address !== lastGeocodedAddress && lastGeocodedAddress && (
+                  <span className="text-xs text-chart-3">Address changed since last lookup</span>
+                )}
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="latitude">Latitude</Label>
+                  <Input
+                    id="latitude"
+                    type="number"
+                    step="any"
+                    value={facilityForm.latitude ?? ""}
+                    onChange={(e) =>
+                      setFacilityForm({ ...facilityForm, latitude: e.target.value ? parseFloat(e.target.value) : null })
+                    }
+                    placeholder="e.g. 43.6532"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="longitude">Longitude</Label>
+                  <Input
+                    id="longitude"
+                    type="number"
+                    step="any"
+                    value={facilityForm.longitude ?? ""}
+                    onChange={(e) =>
+                      setFacilityForm({ ...facilityForm, longitude: e.target.value ? parseFloat(e.target.value) : null })
+                    }
+                    placeholder="e.g. -79.3832"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="geofenceRadius">Geofence Radius (meters)</Label>
+                  <Input
+                    id="geofenceRadius"
+                    type="number"
+                    min={50}
+                    max={2000}
+                    value={facilityForm.geofenceRadius}
+                    onChange={(e) =>
+                      setFacilityForm({ ...facilityForm, geofenceRadius: parseInt(e.target.value) || 200 })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="geofenceMode">Geofence Mode</Label>
+                  <Select
+                    value={facilityForm.geofenceMode}
+                    onValueChange={(value: "strict" | "flag" | "off") =>
+                      setFacilityForm({ ...facilityForm, geofenceMode: value })
+                    }
+                  >
+                    <SelectTrigger id="geofenceMode">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="flag">Flag (allow but record)</SelectItem>
+                      <SelectItem value="strict">Strict (block clock-in)</SelectItem>
+                      <SelectItem value="off">Off</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <GeofenceMapPreview
+                latitude={facilityForm.latitude}
+                longitude={facilityForm.longitude}
+                radiusMeters={facilityForm.geofenceRadius}
+                draggable
+                onPositionChange={(lat, lng) =>
+                  setFacilityForm((prev) => ({ ...prev, latitude: lat, longitude: lng }))
+                }
+                height="250px"
+              />
             </div>
 
             {/* Additional Details Section */}

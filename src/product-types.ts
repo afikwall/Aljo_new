@@ -154,14 +154,16 @@ export const EarlyPayRequestsEntity = {
   instanceType: {} as IEarlyPayRequestsEntity,
 } as const;
 
-export type FacilitiesEntityStatusEnum = "active" | "inactive";
+export type FacilitiesEntityGeofenceModeEnum = "strict" | "flag" | "off";
 
-export type FacilitiesEntityGeofenceModeEnum = "strict" | "flag";
+export type FacilitiesEntityStatusEnum = "active" | "inactive";
 
 /**
  * Stores facility information including contact details, type, and address. Referenced by facility managers and shift listings.
  */
 export interface IFacilitiesEntity {
+  /** Geofencing enforcement mode: strict blocks clock-in outside radius, flag allows but records exception  */
+  geofenceMode?: FacilitiesEntityGeofenceModeEnum;
   /** Primary contact person name at the facility  */
   contactName?: string;
   /** Facility operational status  */
@@ -186,8 +188,6 @@ export interface IFacilitiesEntity {
   province?: string;
   /** Geofence radius in meters for clock-in verification, default 200 meters  */
   geofenceRadius?: number;
-  /** Geofencing enforcement mode: strict blocks clock-in outside radius, flag allows but records exception  */
-  geofenceMode?: FacilitiesEntityGeofenceModeEnum;
   /** Postal code for the facility address  */
   postalCode?: string;
 }

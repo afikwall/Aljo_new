@@ -161,6 +161,19 @@ export default function StaffMyShiftsPage() {
   const [findCoverageShift, setFindCoverageShift] = useState<typeof ShiftsEntity['instanceType'] | null>(null);
   const [submittingTrade, setSubmittingTrade] = useState(false);
 
+  const [showGPSPermissionDialog, setShowGPSPermissionDialog] = useState(false);
+  const [gpsPermissionAction, setGpsPermissionAction] = useState<"clockIn" | "clockOut">("clockIn");
+  const [gpsPendingShift, setGpsPendingShift] = useState<typeof ShiftsEntity['instanceType'] | null>(null);
+
+  const shouldBypassGPS = (facility: any, geoEnabled: boolean) => {
+    if (!geoEnabled) return true;
+    if (!facility) return true;
+    if ((!facility.latitude && facility.latitude !== 0) && (!facility.longitude && facility.longitude !== 0)) return true;
+    if (facility.latitude === 0 && facility.longitude === 0) return true;
+    if (facility.geofenceMode === "off") return true;
+    return false;
+  };
+
   const resetWithdrawForm = useCallback(() => {
     setWithdrawReason("");
     setWithdrawInformedFacility(false);
@@ -664,12 +677,11 @@ export default function StaffMyShiftsPage() {
     setSelectedShift(shift);
 
     try {
-      // Check if geotracking is disabled
-      if (!geotrackingEnabled) {
-        // Bypass GPS - clock in immediately without location check
-        toast.info("Clocking in... (Geotracking disabled)");
+      const facility = getFacility(shift.facilityProfileId);
 
-        // Determine if late clock-in (within window but past shift start)
+      // Check if GPS should be bypassed
+      if (shouldBypassGPS(facility, geotrackingEnabled)) {
+        // Bypass GPS - clock in immediately without location check
         let isLateBlocked = false;
         if (shift.startDateTime) {
           const windowInfo = getClockInWindowInfo(shift.startDateTime, new Date());
@@ -702,7 +714,6 @@ export default function StaffMyShiftsPage() {
         await refetchShifts();
         await refetchTimeLogs();
         setShowShiftModal(false);
-        // Switch to in-progress tab after clock-in
         setActiveTab("in-progress");
         return;
       }
@@ -718,21 +729,22 @@ export default function StaffMyShiftsPage() {
 
       const staffLat = position.coords.latitude;
       const staffLng = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
 
-      const facility = getFacility(shift.facilityProfileId);
-      if (!facility || !facility.latitude || !facility.longitude) {
-        toast.error("Facility location not configured");
-        setClockingIn(false);
-        return;
-      }
-
-      const geofenceRadius = facility.geofenceRadius || 200;
-      const geofenceMode = facility.geofenceMode || "flag";
-      const distance = calculateHaversineDistance(staffLat, staffLng, facility.latitude, facility.longitude);
+      const geofenceRadius = facility?.geofenceRadius || 200;
+      const geofenceMode = facility?.geofenceMode || "flag";
+      const distance = calculateHaversineDistance(staffLat, staffLng, facility!.latitude!, facility!.longitude!);
 
       let geofenceStatus: "within" | "outside_flagged" | "outside_blocked";
 
-      if (distance <= geofenceRadius) {
+      // GPS accuracy check
+      if (accuracy > geofenceRadius) {
+        toast.warning(
+          `GPS accuracy is ${Math.round(accuracy)}m, which exceeds the geofence radius. Location recorded but may be inaccurate.`,
+          { duration: 5000 }
+        );
+        geofenceStatus = "outside_flagged";
+      } else if (distance <= geofenceRadius) {
         geofenceStatus = "within";
       } else if (geofenceMode === "flag") {
         geofenceStatus = "outside_flagged";
@@ -783,14 +795,16 @@ export default function StaffMyShiftsPage() {
       await refetchShifts();
       await refetchTimeLogs();
       setShowShiftModal(false);
-      // Switch to in-progress tab after clock-in
       setActiveTab("in-progress");
     } catch (error: any) {
-      if (error.code === 1) {
-        toast.error("Location permission denied. Please enable location access to clock in.");
-      } else if (error.code === 2) {
+      if (error?.code === 1) {
+        // GPS permission denied - show dialog
+        setGpsPendingShift(shift);
+        setGpsPermissionAction("clockIn");
+        setShowGPSPermissionDialog(true);
+      } else if (error?.code === 2) {
         toast.error("Unable to determine your location. Please try again.");
-      } else if (error.code === 3) {
+      } else if (error?.code === 3) {
         toast.error("Location request timed out. Please try again.");
       } else {
         toast.error("Failed to clock in. Please try again.");
@@ -801,7 +815,7 @@ export default function StaffMyShiftsPage() {
     }
   };
 
-  const executeClockOut = async (lat: number, lng: number, outsideGeofence: boolean) => {
+  const executeClockOut = async (lat: number | null, lng: number | null, outsideGeofence: boolean) => {
     if (!inProgressShift || !activeTimeLog || !staffProfileId) return;
 
     setClockingOut(true);
@@ -944,6 +958,14 @@ export default function StaffMyShiftsPage() {
     setShowShiftModal(false);
     setClockingOut(true);
 
+    // Check if GPS should be bypassed for clock-out
+    const facility = getFacility(inProgressShift.facilityProfileId);
+    if (shouldBypassGPS(facility, geotrackingEnabled)) {
+      setClockingOut(false);
+      await executeClockOut(null, null, false);
+      return;
+    }
+
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -956,7 +978,6 @@ export default function StaffMyShiftsPage() {
       const staffLat = position.coords.latitude;
       const staffLng = position.coords.longitude;
 
-      const facility = getFacility(inProgressShift.facilityProfileId);
       if (facility && facility.latitude && facility.longitude) {
         const geofenceRadius = facility.geofenceRadius || 200;
         const distance = calculateHaversineDistance(staffLat, staffLng, facility.latitude, facility.longitude);
@@ -973,11 +994,13 @@ export default function StaffMyShiftsPage() {
       setClockingOut(false);
       await executeClockOut(staffLat, staffLng, false);
     } catch (error: any) {
-      if (error.code === 1) {
-        toast.error("Location permission denied. Please enable location access to clock out.");
-      } else if (error.code === 2) {
+      if (error?.code === 1) {
+        // GPS permission denied - show dialog, never block clock-out
+        setGpsPermissionAction("clockOut");
+        setShowGPSPermissionDialog(true);
+      } else if (error?.code === 2) {
         toast.error("Unable to determine your location. Please try again.");
-      } else if (error.code === 3) {
+      } else if (error?.code === 3) {
         toast.error("Location request timed out. Please try again.");
       } else {
         toast.error("Failed to clock out. Please try again.");
@@ -1253,6 +1276,7 @@ export default function StaffMyShiftsPage() {
                   shiftEndDateTime={inProgressShift.endDateTime || ""}
                   clockInTime={activeTimeLog.clockInTime || ""}
                   currentTime={currentTime}
+                  geofenceStatus={activeTimeLog?.geofenceStatus as string | undefined}
                 />
 
                 <Card className="border">
@@ -1884,6 +1908,82 @@ export default function StaffMyShiftsPage() {
         isSubmitting={submittingTrade}
         onSubmit={handleSubmitTrade}
       />
+
+      {/* GPS Permission Denied Dialog */}
+      <Dialog open={showGPSPermissionDialog} onOpenChange={setShowGPSPermissionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Location Access Required</DialogTitle>
+            <DialogDescription>
+              GPS location permission was denied. You can retry after enabling location access in your browser settings, or proceed without GPS.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowGPSPermissionDialog(false);
+                if (gpsPermissionAction === "clockIn" && gpsPendingShift) {
+                  handleClockIn(gpsPendingShift);
+                } else {
+                  handleClockOut();
+                }
+              }}
+            >
+              Retry
+            </Button>
+            <Button
+              onClick={async () => {
+                setShowGPSPermissionDialog(false);
+                if (gpsPermissionAction === "clockIn" && gpsPendingShift) {
+                  // Clock in without GPS
+                  try {
+                    setClockingIn(true);
+                    let isLateBlocked = false;
+                    if (gpsPendingShift.startDateTime) {
+                      const windowInfo = getClockInWindowInfo(gpsPendingShift.startDateTime, new Date());
+                      isLateBlocked = windowInfo.isLateButAllowed;
+                    }
+                    const now = new Date().toISOString();
+                    const timeLogData: Record<string, unknown> = {
+                      clockInTime: now,
+                      clockInLat: null,
+                      clockInLng: null,
+                      geofenceStatus: "outside_flagged",
+                      shiftProfileId: gpsPendingShift.id,
+                      staffProfileId: staffProfileId,
+                      facilityProfileId: gpsPendingShift.facilityProfileId,
+                    };
+                    if (isLateBlocked) {
+                      timeLogData.isLateBlocked = true;
+                    }
+                    await createTimeLog({ data: timeLogData });
+                    await updateShift({
+                      id: gpsPendingShift.id || "",
+                      data: { status: "in_progress" },
+                    });
+                    toast.success("Clocked in without GPS");
+                    await refetchShifts();
+                    await refetchTimeLogs();
+                    setShowShiftModal(false);
+                    setActiveTab("in-progress");
+                  } catch {
+                    toast.error("Failed to clock in");
+                  } finally {
+                    setClockingIn(false);
+                    setGpsPendingShift(null);
+                  }
+                } else {
+                  // Clock out without GPS - never block
+                  await executeClockOut(null, null, true);
+                }
+              }}
+            >
+              {gpsPermissionAction === "clockIn" ? "Clock In Without GPS" : "Clock Out Without GPS"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
