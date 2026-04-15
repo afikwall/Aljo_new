@@ -53,7 +53,6 @@ import {
   filterOptionalDocuments,
   DOCUMENT_TYPE_TO_CATEGORY,
   mapOptionalCategoryToDbCategory,
-  STATUS_SORT_ORDER,
 } from "@/utils/documentUtils";
 
 // --- Component ---
@@ -152,20 +151,17 @@ function StaffMyDocumentsContent() {
     return map;
   }, [requiredDocs]);
 
-  // Build checklist items sorted by status priority
+  // Build checklist items in role-defined order
   const checklistItems = useMemo(() => {
-    return requiredDocTypes
-      .map((docType) => {
-        const docs = documentsByType[docType] || [];
-        const cardStatus = getCardStatus(docs);
-        return {
-          docType,
-          cardStatus,
-          docs,
-          sortOrder: STATUS_SORT_ORDER[cardStatus],
-        };
-      })
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return requiredDocTypes.map((docType) => {
+      const docs = documentsByType[docType] || [];
+      const cardStatus = getCardStatus(docs);
+      return {
+        docType,
+        cardStatus,
+        docs,
+      };
+    });
   }, [requiredDocTypes, documentsByType]);
 
   // Progress counting - only required documents
