@@ -40,6 +40,7 @@ import { toast } from "sonner";
 import { ManageLoginsSection } from "@/components/ManageLoginsSection";
 import { FMCountBadge } from "@/components/FMCountBadge";
 import { getFMCountForFacility } from "@/utils/fmUtils";
+import { cn } from "@/lib/utils";
 import { FacilityDocumentsTab } from "@/components/FacilityDocumentsTab";
 
 export const pageIcon = "building-2";
@@ -1051,23 +1052,54 @@ export default function AdminFacilityManagementPage() {
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="geofenceMode">Geofence Mode</Label>
-                  <Select
-                    value={facilityForm.geofenceMode}
-                    onValueChange={(value: "strict" | "flag" | "off") =>
-                      setFacilityForm({ ...facilityForm, geofenceMode: value })
-                    }
-                  >
-                    <SelectTrigger id="geofenceMode">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="flag">Flag (allow but record)</SelectItem>
-                      <SelectItem value="strict">Strict (block clock-in)</SelectItem>
-                      <SelectItem value="off">Off</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-3 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="geofenceToggle">Enable Geofencing</Label>
+                    <Switch
+                      id="geofenceToggle"
+                      checked={facilityForm.geofenceMode !== "off"}
+                      onCheckedChange={(checked) => {
+                        if (!checked) {
+                          setFacilityForm({ ...facilityForm, geofenceMode: "off" });
+                        } else {
+                          setFacilityForm({
+                            ...facilityForm,
+                            geofenceMode: facilityForm.geofenceMode !== "off" ? facilityForm.geofenceMode : "flag",
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  {facilityForm.geofenceMode !== "off" && (
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+                          facilityForm.geofenceMode === "flag"
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-muted-foreground hover:bg-muted"
+                        )}
+                        onClick={() => setFacilityForm({ ...facilityForm, geofenceMode: "flag" })}
+                      >
+                        <div>Flag</div>
+                        <div className="text-xs font-normal opacity-80">Allow but record</div>
+                      </button>
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+                          facilityForm.geofenceMode === "strict"
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-muted-foreground hover:bg-muted"
+                        )}
+                        onClick={() => setFacilityForm({ ...facilityForm, geofenceMode: "strict" })}
+                      >
+                        <div>Strict</div>
+                        <div className="text-xs font-normal opacity-80">Block clock-in</div>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
