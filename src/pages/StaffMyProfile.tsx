@@ -610,19 +610,21 @@ export default function StaffMyProfilePage() {
 
       {/* Fixed Save Bar */}
       {isEditMode && (
-        <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 bg-background border-t p-4 z-50">
-          <div className="flex flex-col sm:flex-row gap-3 justify-end">
+        <div className="fixed bottom-14 md:bottom-0 left-0 md:left-64 right-0 bg-background border-t p-4 z-50">
+          <div className="flex flex-row gap-3 justify-end">
             <Button
               variant="outline"
+              size="sm"
               onClick={handleCancel}
-              className="h-11 sm:w-auto w-full"
+              className="flex-1 sm:flex-initial h-10"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
               disabled={updating}
-              className="h-11 sm:w-auto w-full"
+              size="sm"
+              className="flex-1 sm:flex-initial h-10"
             >
               {updating ? (
                 <>

@@ -604,12 +604,12 @@ export default function StaffAvailableShiftsPage() {
           )}
 
           {/* Date filter buttons */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <Button
               variant={dateFilter === "today" ? "default" : "outline"}
               size="sm"
               onClick={() => handlePresetFilterClick("today")}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap text-xs px-2.5 py-1.5 h-8"
             >
               Today
             </Button>
@@ -617,7 +617,7 @@ export default function StaffAvailableShiftsPage() {
               variant={dateFilter === "tomorrow" ? "default" : "outline"}
               size="sm"
               onClick={() => handlePresetFilterClick("tomorrow")}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap text-xs px-2.5 py-1.5 h-8"
             >
               Tomorrow
             </Button>
@@ -625,7 +625,7 @@ export default function StaffAvailableShiftsPage() {
               variant={dateFilter === "this_week" ? "default" : "outline"}
               size="sm"
               onClick={() => handlePresetFilterClick("this_week")}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap text-xs px-2.5 py-1.5 h-8"
             >
               This Week
             </Button>
@@ -633,7 +633,7 @@ export default function StaffAvailableShiftsPage() {
               variant={dateFilter === "next_week" ? "default" : "outline"}
               size="sm"
               onClick={() => handlePresetFilterClick("next_week")}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap text-xs px-2.5 py-1.5 h-8"
             >
               Next Week
             </Button>
@@ -642,7 +642,7 @@ export default function StaffAvailableShiftsPage() {
                 <Button
                   variant={dateFilter === "custom" ? "default" : "outline"}
                   size="sm"
-                  className="whitespace-nowrap"
+                  className="whitespace-nowrap text-xs px-2.5 py-1.5 h-8"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {customButtonLabel}
