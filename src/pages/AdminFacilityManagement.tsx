@@ -319,7 +319,6 @@ export default function AdminFacilityManagementPage() {
       refetchStaffRates();
     } catch (error) {
       toast.error("Failed to add staff rate");
-      console.error(error);
     }
   };
 
@@ -356,7 +355,6 @@ export default function AdminFacilityManagementPage() {
       refetchBillingRates();
     } catch (error) {
       toast.error("Failed to add billing rate");
-      console.error(error);
     }
   };
 
@@ -375,7 +373,6 @@ export default function AdminFacilityManagementPage() {
       refetchStaffRates();
     } catch (error) {
       toast.error("Failed to update staff rate");
-      console.error(error);
     }
   };
 
@@ -391,7 +388,6 @@ export default function AdminFacilityManagementPage() {
       refetchBillingRates();
     } catch (error) {
       toast.error("Failed to update billing rate");
-      console.error(error);
     }
   };
 
@@ -873,7 +869,7 @@ export default function AdminFacilityManagementPage() {
                 : "Enter facility information and contact details"}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4 max-h-[70vh] overflow-y-auto">
             {/* Facility Info Section */}
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">Facility Information</h3>
@@ -1008,7 +1004,7 @@ export default function AdminFacilityManagementPage() {
                   Lookup Coordinates
                 </Button>
                 {facilityForm.address && facilityForm.address !== lastGeocodedAddress && lastGeocodedAddress && (
-                  <span className="text-xs text-chart-3">Address changed since last lookup</span>
+                  <span className="text-xs text-chart-3">Address changed — click Lookup Coordinates to update the map.</span>
                 )}
               </div>
 
