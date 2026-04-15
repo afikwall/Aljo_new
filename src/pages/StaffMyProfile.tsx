@@ -424,7 +424,7 @@ export default function StaffMyProfilePage() {
   }
 
   return (
-    <div className={cn("p-4 md:p-6 space-y-3", isEditMode && "pb-24")}>
+    <div className={cn("p-4 md:p-6 space-y-3", isEditMode && "pb-40 md:pb-24")}>
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
@@ -610,7 +610,7 @@ export default function StaffMyProfilePage() {
 
       {/* Fixed Save Bar */}
       {isEditMode && (
-        <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-background border-t p-4 z-50">
+        <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 bg-background border-t p-4 z-50">
           <div className="flex flex-col sm:flex-row gap-3 justify-end">
             <Button
               variant="outline"
